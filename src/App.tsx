@@ -25,6 +25,8 @@ import ReportsView from "./components/ReportsView";
 import RoutersView from "./components/RoutersView";
 import SettingsView from "./components/SettingsView";
 import HelpView from "./components/HelpView";
+import OltMonitoringView from "./components/OltMonitoringView";
+import PaymentGatewayView from "./components/PaymentGatewayView";
 
 export default function App() {
   // Authentication State
@@ -315,6 +317,17 @@ export default function App() {
             onDeletePlan={handleDeletePlan}
             showAddModal={showAddPlanModal}
             onCloseAddModal={() => setShowAddPlanModal(!showAddPlanModal)}
+          />
+        );
+      case "olt":
+        return <OltMonitoringView />;
+      case "gateway":
+        return (
+          <PaymentGatewayView
+            customers={customers}
+            plans={plans}
+            onUpdateCustomer={handleUpdateCustomer}
+            onAddTransaction={handleAddTransaction}
           />
         );
       case "transaksi":

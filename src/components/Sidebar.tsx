@@ -11,7 +11,9 @@ import {
   HelpCircle, 
   LogOut,
   Plus,
-  X
+  X,
+  Radio,
+  CreditCard
 } from "lucide-react";
 
 interface SidebarProps {
@@ -49,6 +51,8 @@ export default function Sidebar({
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "pelanggan", label: "Pelanggan", icon: Users },
     { id: "paket", label: "Paket Layanan", icon: Wifi },
+    { id: "olt", label: "Monitoring OLT", icon: Radio },
+    { id: "gateway", label: "Payment Gateway", icon: CreditCard },
     { id: "transaksi", label: "Transaksi", icon: FileText },
     { id: "laporan", label: "Laporan", icon: BarChart3 },
     { id: "router", label: "Router Management", icon: Network },
