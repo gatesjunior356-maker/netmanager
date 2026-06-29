@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Radio, 
   Cpu, 
@@ -50,57 +50,66 @@ interface OnuDevice {
   uptime: string;
   lastOffline?: string;
   ipAllocated?: string;
+  oltId?: string;
 }
 
 export default function OltMonitoringView() {
-  // Sample OLT Devices
-  const oltDevices: OltDevice[] = [
-    {
-      id: "olt-01",
-      name: "OLT-01: Huawei MA5608T GPON (Core Pusat)",
-      type: "GPON",
-      vendor: "Huawei",
-      ipAddress: "10.10.20.2",
-      portsCount: 8,
-      cpuLoad: 14,
-      temp: 41,
-      uptime: "45d 12h 4m",
-      totalOnu: 154,
-      onlineOnu: 142,
-      offlineOnu: 8,
-      warningOnu: 4
-    },
-    {
-      id: "olt-02",
-      name: "OLT-02: ZTE C320 GPON (Cluster Selatan)",
-      type: "GPON",
-      vendor: "ZTE",
-      ipAddress: "10.10.20.3",
-      portsCount: 4,
-      cpuLoad: 22,
-      temp: 47,
-      uptime: "12d 6h 19m",
-      totalOnu: 82,
-      onlineOnu: 75,
-      offlineOnu: 5,
-      warningOnu: 2
-    },
-    {
-      id: "olt-03",
-      name: "OLT-03: HiOSO HA7304C EPON (Sektor Barat FTTH)",
-      type: "EPON",
-      vendor: "HiOSO",
-      ipAddress: "10.10.30.5",
-      portsCount: 4,
-      cpuLoad: 8,
-      temp: 38,
-      uptime: "89d 22h 44m",
-      totalOnu: 48,
-      onlineOnu: 44,
-      offlineOnu: 3,
-      warningOnu: 1
-    }
-  ];
+  // Sample OLT Devices loaded as state
+  const [oltDevices, setOltDevices] = useState<OltDevice[]>(() => {
+    const saved = localStorage.getItem("netmanager_olt_devices");
+    if (saved) return JSON.parse(saved);
+    return [
+      {
+        id: "olt-01",
+        name: "OLT-01: Huawei MA5608T GPON (Core Pusat)",
+        type: "GPON",
+        vendor: "Huawei",
+        ipAddress: "10.10.20.2",
+        portsCount: 8,
+        cpuLoad: 14,
+        temp: 41,
+        uptime: "45d 12h 4m",
+        totalOnu: 154,
+        onlineOnu: 142,
+        offlineOnu: 8,
+        warningOnu: 4
+      },
+      {
+        id: "olt-02",
+        name: "OLT-02: ZTE C320 GPON (Cluster Selatan)",
+        type: "GPON",
+        vendor: "ZTE",
+        ipAddress: "10.10.20.3",
+        portsCount: 4,
+        cpuLoad: 22,
+        temp: 47,
+        uptime: "12d 6h 19m",
+        totalOnu: 82,
+        onlineOnu: 75,
+        offlineOnu: 5,
+        warningOnu: 2
+      },
+      {
+        id: "olt-03",
+        name: "OLT-03: HiOSO HA7304C EPON (Sektor Barat FTTH)",
+        type: "EPON",
+        vendor: "HiOSO",
+        ipAddress: "10.10.30.5",
+        portsCount: 4,
+        cpuLoad: 8,
+        temp: 38,
+        uptime: "89d 22h 44m",
+        totalOnu: 48,
+        onlineOnu: 44,
+        offlineOnu: 3,
+        warningOnu: 1
+      }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("netmanager_olt_devices", JSON.stringify(oltDevices));
+  }, [oltDevices]);
 
   const [selectedOltId, setSelectedOltId] = useState<string>("olt-01");
   const selectedOlt = oltDevices.find(o => o.id === selectedOltId) || oltDevices[0];
@@ -109,28 +118,88 @@ export default function OltMonitoringView() {
   const [selectedPonPort, setSelectedPonPort] = useState<number | null>(null); // null means "All PON Ports"
 
   // Onu Data list (pre-populated with realistic simulation data matching OLT-01 Huawei)
-  const [onuData, setOnuData] = useState<OnuDevice[]>([
-    // PON Port 1
-    { id: "ONU-1/1", name: "Budi Setiawan", sn: "HWTC8C726A20", ponPort: 1, onuIndex: 1, type: "Huawei EG8141A5", rxPower: -19.4, distance: 0.8, status: "Online", uptime: "14d 2h", ipAllocated: "192.168.1.10" },
-    { id: "ONU-1/2", name: "Hendra Wijaya", sn: "HWTC8C7291F0", ponPort: 1, onuIndex: 2, type: "Huawei EG8141A5", rxPower: -21.1, distance: 1.1, status: "Online", uptime: "28d 19h", ipAllocated: "192.168.1.11" },
-    { id: "ONU-1/3", name: "Siti Rahmawati", sn: "HWTC4A12B880", ponPort: 1, onuIndex: 3, type: "Huawei EG8010H", rxPower: -26.4, distance: 2.3, status: "Online", uptime: "4d 1h", ipAllocated: "192.168.1.12" }, // Warning (Signal Lemah)
-    { id: "ONU-1/4", name: "Adi Saputra", sn: "HWTC7E188C10", ponPort: 1, onuIndex: 4, type: "ZTE F609", rxPower: -18.2, distance: 0.5, status: "Online", uptime: "42d 11h", ipAllocated: "192.168.1.13" },
-    { id: "ONU-1/5", name: "Diana Putri", sn: "HWTC9201FC80", ponPort: 1, onuIndex: 5, type: "Huawei EG8141A5", rxPower: -99.0, distance: 1.7, status: "LOS", uptime: "-", lastOffline: "28 Jun 15:32" }, // Loss of Signal
-    
-    // PON Port 2
-    { id: "ONU-2/1", name: "Rian Hidayat", sn: "HWTC82C9012A", ponPort: 2, onuIndex: 1, type: "Huawei EG8141A5", rxPower: -20.5, distance: 1.2, status: "Online", uptime: "10d 6h", ipAllocated: "192.168.1.14" },
-    { id: "ONU-2/2", name: "Eko Prasetyo", sn: "HWTC732A1F50", ponPort: 2, onuIndex: 2, type: "ZTE F609", rxPower: -23.8, distance: 1.9, status: "Online", uptime: "5d 20h", ipAllocated: "192.168.1.15" },
-    { id: "ONU-2/3", name: "Mega Utami", sn: "HWTC802B33AA", ponPort: 2, onuIndex: 3, type: "Huawei EG8010H", rxPower: -28.9, distance: 2.8, status: "Online", uptime: "1d 12h", ipAllocated: "192.168.1.16" }, // Warning
-    { id: "ONU-2/4", name: "Yusuf Mansur", sn: "HWTC955CD901", ponPort: 2, onuIndex: 4, type: "FiberHome AN5506", rxPower: -99.0, distance: 2.1, status: "Offline", uptime: "-", lastOffline: "27 Jun 09:12" },
-    { id: "ONU-2/5", name: "Slamet Santoso", sn: "HWTC82A41C90", ponPort: 2, onuIndex: 5, type: "Huawei EG8141A5", rxPower: -19.1, distance: 0.9, status: "Online", uptime: "65d 4h", ipAllocated: "192.168.1.17" },
-    
-    // PON Port 3
-    { id: "ONU-3/1", name: "Anisa Rahma", sn: "HWTC89221FA1", ponPort: 3, onuIndex: 1, type: "ZTE F609", rxPower: -17.8, distance: 0.6, status: "Online", uptime: "8d 14h", ipAllocated: "192.168.1.18" },
-    { id: "ONU-3/2", name: "Dwi Cahyono", sn: "HWTC7E10A980", ponPort: 3, onuIndex: 2, type: "Huawei EG8141A5", rxPower: -22.3, distance: 1.4, status: "Online", uptime: "19d 22h", ipAllocated: "192.168.1.19" },
-    { id: "ONU-3/3", name: "Lestari Dewi", sn: "HWTC92211C88", ponPort: 3, onuIndex: 3, type: "Huawei EG8010H", rxPower: -32.5, distance: 3.1, status: "LOS", uptime: "-", lastOffline: "28 Jun 16:11" }, // Warning / Red
-    { id: "ONU-3/4", name: "Guntur Wibowo", sn: "HWTC91A88D22", ponPort: 3, onuIndex: 4, type: "FiberHome AN5506", rxPower: -21.4, distance: 1.3, status: "Online", uptime: "12d 8h", ipAllocated: "192.168.1.20" },
-    { id: "ONU-3/5", name: "Indah Permata", sn: "HWTC7C7118B0", ponPort: 3, onuIndex: 5, type: "Huawei EG8141A5", rxPower: -99.0, distance: 2.2, status: "Dying Gasp", uptime: "-", lastOffline: "28 Jun 16:45" }, // Power outage at client site
-  ]);
+  const [onuData, setOnuData] = useState<OnuDevice[]>(() => {
+    const saved = localStorage.getItem("netmanager_onu_devices");
+    if (saved) return JSON.parse(saved);
+    return [
+      // PON Port 1 -> OLT-01
+      { id: "ONU-1/1", name: "Budi Setiawan", sn: "HWTC8C726A20", ponPort: 1, onuIndex: 1, type: "Huawei EG8141A5", rxPower: -19.4, distance: 0.8, status: "Online", uptime: "14d 2h", ipAllocated: "192.168.1.10", oltId: "olt-01" },
+      { id: "ONU-1/2", name: "Hendra Wijaya", sn: "HWTC8C7291F0", ponPort: 1, onuIndex: 2, type: "Huawei EG8141A5", rxPower: -21.1, distance: 1.1, status: "Online", uptime: "28d 19h", ipAllocated: "192.168.1.11", oltId: "olt-01" },
+      { id: "ONU-1/3", name: "Siti Rahmawati", sn: "HWTC4A12B880", ponPort: 1, onuIndex: 3, type: "Huawei EG8010H", rxPower: -26.4, distance: 2.3, status: "Online", uptime: "4d 1h", ipAllocated: "192.168.1.12", oltId: "olt-01" }, // Warning (Signal Lemah)
+      { id: "ONU-1/4", name: "Adi Saputra", sn: "HWTC7E188C10", ponPort: 1, onuIndex: 4, type: "ZTE F609", rxPower: -18.2, distance: 0.5, status: "Online", uptime: "42d 11h", ipAllocated: "192.168.1.13", oltId: "olt-01" },
+      { id: "ONU-1/5", name: "Diana Putri", sn: "HWTC9201FC80", ponPort: 1, onuIndex: 5, type: "Huawei EG8141A5", rxPower: -99.0, distance: 1.7, status: "LOS", uptime: "-", lastOffline: "28 Jun 15:32", oltId: "olt-01" }, // Loss of Signal
+      
+      // PON Port 2 -> OLT-02
+      { id: "ONU-2/1", name: "Rian Hidayat", sn: "HWTC82C9012A", ponPort: 2, onuIndex: 1, type: "Huawei EG8141A5", rxPower: -20.5, distance: 1.2, status: "Online", uptime: "10d 6h", ipAllocated: "192.168.1.14", oltId: "olt-02" },
+      { id: "ONU-2/2", name: "Eko Prasetyo", sn: "HWTC732A1F50", ponPort: 2, onuIndex: 2, type: "ZTE F609", rxPower: -23.8, distance: 1.9, status: "Online", uptime: "5d 20h", ipAllocated: "192.168.1.15", oltId: "olt-02" },
+      { id: "ONU-2/3", name: "Mega Utami", sn: "HWTC802B33AA", ponPort: 2, onuIndex: 3, type: "Huawei EG8010H", rxPower: -28.9, distance: 2.8, status: "Online", uptime: "1d 12h", ipAllocated: "192.168.1.16", oltId: "olt-02" }, // Warning
+      { id: "ONU-2/4", name: "Yusuf Mansur", sn: "HWTC955CD901", ponPort: 2, onuIndex: 4, type: "FiberHome AN5506", rxPower: -99.0, distance: 2.1, status: "Offline", uptime: "-", lastOffline: "27 Jun 09:12", oltId: "olt-02" },
+      { id: "ONU-2/5", name: "Slamet Santoso", sn: "HWTC82A41C90", ponPort: 2, onuIndex: 5, type: "Huawei EG8141A5", rxPower: -19.1, distance: 0.9, status: "Online", uptime: "65d 4h", ipAllocated: "192.168.1.17", oltId: "olt-02" },
+      
+      // PON Port 3 -> OLT-03
+      { id: "ONU-3/1", name: "Anisa Rahma", sn: "HWTC89221FA1", ponPort: 3, onuIndex: 1, type: "ZTE F609", rxPower: -17.8, distance: 0.6, status: "Online", uptime: "8d 14h", ipAllocated: "192.168.1.18", oltId: "olt-03" },
+      { id: "ONU-3/2", name: "Dwi Cahyono", sn: "HWTC7E10A980", ponPort: 3, onuIndex: 2, type: "Huawei EG8141A5", rxPower: -22.3, distance: 1.4, status: "Online", uptime: "19d 22h", ipAllocated: "192.168.1.19", oltId: "olt-03" },
+      { id: "ONU-3/3", name: "Lestari Dewi", sn: "HWTC92211C88", ponPort: 3, onuIndex: 3, type: "Huawei EG8010H", rxPower: -32.5, distance: 3.1, status: "LOS", uptime: "-", lastOffline: "28 Jun 16:11", oltId: "olt-03" }, // Warning / Red
+      { id: "ONU-3/4", name: "Guntur Wibowo", sn: "HWTC91A88D22", ponPort: 3, onuIndex: 4, type: "FiberHome AN5506", rxPower: -21.4, distance: 1.3, status: "Online", uptime: "12d 8h", ipAllocated: "192.168.1.20", oltId: "olt-03" },
+      { id: "ONU-3/5", name: "Indah Permata", sn: "HWTC7C7118B0", ponPort: 3, onuIndex: 5, type: "Huawei EG8141A5", rxPower: -99.0, distance: 2.2, status: "Dying Gasp", uptime: "-", lastOffline: "28 Jun 16:45", oltId: "olt-03" }, // Power outage at client site
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("netmanager_onu_devices", JSON.stringify(onuData));
+  }, [onuData]);
+
+  // Add OLT Form States
+  const [showAddOltModal, setShowAddOltModal] = useState(false);
+  const [newOltName, setNewOltName] = useState("");
+  const [newOltType, setNewOltType] = useState<"GPON" | "EPON" | "XPON">("GPON");
+  const [newOltVendor, setNewOltVendor] = useState("Huawei");
+  const [newOltIp, setNewOltIp] = useState("");
+  const [newOltPorts, setNewOltPorts] = useState(8);
+  const [newOltLocation, setNewOltLocation] = useState("");
+
+  const handleAddOltSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOltName || !newOltIp) {
+      alert("Nama OLT dan IP Address wajib diisi!");
+      return;
+    }
+
+    const newId = `olt-${Date.now()}`;
+    const locationStr = newOltLocation ? ` (${newOltLocation})` : "";
+    const fullName = `${newOltName}: ${newOltVendor} ${newOltType}${locationStr}`;
+
+    const newOlt: OltDevice = {
+      id: newId,
+      name: fullName,
+      type: newOltType,
+      vendor: newOltVendor,
+      ipAddress: newOltIp,
+      portsCount: Number(newOltPorts),
+      cpuLoad: Math.floor(10 + Math.random() * 15),
+      temp: Math.floor(35 + Math.random() * 12),
+      uptime: "0d 0h 1m",
+      totalOnu: 0,
+      onlineOnu: 0,
+      offlineOnu: 0,
+      warningOnu: 0
+    };
+
+    setOltDevices(prev => [...prev, newOlt]);
+    setSelectedOltId(newId);
+    setSelectedPonPort(null);
+    setShowAddOltModal(false);
+
+    // Reset Form
+    setNewOltName("");
+    setNewOltIp("");
+    setNewOltLocation("");
+    setNewOltPorts(8);
+    setNewOltType("GPON");
+    setNewOltVendor("Huawei");
+
+    alert(`Perangkat OLT "${newOltName}" berhasil ditambahkan dan dihubungkan!`);
+  };
 
   // Search & Filter Status
   const [searchTerm, setSearchTerm] = useState("");
@@ -230,10 +299,24 @@ export default function OltMonitoringView() {
       distance: parseFloat((0.5 + Math.random() * 2).toFixed(1)),
       status: "Online",
       uptime: "0d 0h 1m",
-      ipAllocated: `192.168.1.${Math.floor(21 + Math.random() * 200)}`
+      ipAllocated: `192.168.1.${Math.floor(21 + Math.random() * 200)}`,
+      oltId: selectedOltId
     };
 
     setOnuData(prev => [newOnu, ...prev]);
+    
+    // Update active OLT stats
+    setOltDevices(prev => prev.map(olt => {
+      if (olt.id === selectedOltId) {
+        return {
+          ...olt,
+          totalOnu: olt.totalOnu + 1,
+          onlineOnu: olt.onlineOnu + 1
+        };
+      }
+      return olt;
+    }));
+
     setRogueOnus(prev => prev.filter(r => r.sn !== onboardSn));
     setShowRogueModal(false);
     setOnboardName("");
@@ -242,6 +325,10 @@ export default function OltMonitoringView() {
 
   // Filter ONU list
   const filteredOnus = onuData.filter(onu => {
+    // OLT filter (defaulting to olt-01 if not specified)
+    const onuOltId = onu.oltId || "olt-01";
+    if (onuOltId !== selectedOltId) return false;
+
     // Port filter
     if (selectedPonPort !== null && onu.ponPort !== selectedPonPort) return false;
 
@@ -281,25 +368,33 @@ export default function OltMonitoringView() {
           </p>
         </div>
 
-        {/* Selected OLT Dropdown */}
-        <div className="relative shrink-0 w-full sm:w-auto">
-          <label className="block text-[9px] text-white/40 uppercase font-bold tracking-wider mb-1.5">Pilih Perangkat OLT</label>
-          <div className="relative flex items-center">
-            <Server className="absolute left-3 w-4 h-4 text-white/40" />
-            <select
-              value={selectedOltId}
-              onChange={(e) => {
-                setSelectedOltId(e.target.value);
-                setSelectedPonPort(null); // Reset port on OLT change
-              }}
-              className="w-full sm:w-80 pl-9 pr-8 py-2.5 bg-black/60 border border-white/10 rounded-xl text-xs font-bold text-white outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 cursor-pointer appearance-none"
-            >
-              {oltDevices.map((olt) => (
-                <option key={olt.id} value={olt.id} className="bg-[#0C0C0C] py-2">{olt.name}</option>
-              ))}
-            </select>
-            <ChevronRight className="absolute right-3 w-4 h-4 text-white/40 rotate-90 pointer-events-none" />
+        {/* Selected OLT Dropdown & Add Button */}
+        <div className="flex flex-col sm:flex-row items-end gap-3 shrink-0 w-full sm:w-auto">
+          <div className="relative w-full sm:w-auto">
+            <label className="block text-[9px] text-white/40 uppercase font-bold tracking-wider mb-1.5">Pilih Perangkat OLT</label>
+            <div className="relative flex items-center">
+              <Server className="absolute left-3 w-4 h-4 text-white/40" />
+              <select
+                value={selectedOltId}
+                onChange={(e) => {
+                  setSelectedOltId(e.target.value);
+                  setSelectedPonPort(null); // Reset port on OLT change
+                }}
+                className="w-full sm:w-72 pl-9 pr-8 py-2.5 bg-black/60 border border-white/10 rounded-xl text-xs font-bold text-white outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 cursor-pointer appearance-none"
+              >
+                {oltDevices.map((olt) => (
+                  <option key={olt.id} value={olt.id} className="bg-[#0C0C0C] py-2">{olt.name}</option>
+                ))}
+              </select>
+              <ChevronRight className="absolute right-3 w-4 h-4 text-white/40 rotate-90 pointer-events-none" />
+            </div>
           </div>
+          <button
+            onClick={() => setShowAddOltModal(true)}
+            className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold px-4 py-2.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap border border-amber-500 hover:border-amber-400"
+          >
+            <Plus className="w-4 h-4" /> Tambah OLT
+          </button>
         </div>
       </div>
 
@@ -679,6 +774,114 @@ export default function OltMonitoringView() {
                   className="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-extrabold py-2.5 rounded-xl text-xs shadow-lg transition-all cursor-pointer active:scale-[0.98]"
                 >
                   Daftarkan ONU
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add OLT Modal */}
+      {showAddOltModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-[#0C0C0C] border border-white/5 p-6 rounded-2xl shadow-2xl relative">
+            <h3 className="text-lg font-bold text-white mb-2">Tambah Perangkat OLT Baru</h3>
+            <p className="text-xs text-white/40 mb-6 leading-relaxed">
+              Integrasikan perangkat OLT baru ke dalam monitoring sistem jaringan Fiber Optik (FTTH) Anda.
+            </p>
+
+            <form onSubmit={handleAddOltSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">Nama / Kode OLT</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: OLT-04"
+                  value={newOltName}
+                  onChange={(e) => setNewOltName(e.target.value)}
+                  className="w-full py-2.5 px-3 bg-black border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white placeholder-white/20 outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">Teknologi PON</label>
+                  <select
+                    value={newOltType}
+                    onChange={(e) => setNewOltType(e.target.value as "GPON" | "EPON" | "XPON")}
+                    className="w-full py-2.5 px-3 bg-black border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white outline-none cursor-pointer"
+                  >
+                    <option value="GPON" className="bg-[#0C0C0C]">GPON</option>
+                    <option value="EPON" className="bg-[#0C0C0C]">EPON</option>
+                    <option value="XPON" className="bg-[#0C0C0C]">XPON</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">Vendor OLT</label>
+                  <select
+                    value={newOltVendor}
+                    onChange={(e) => setNewOltVendor(e.target.value)}
+                    className="w-full py-2.5 px-3 bg-black border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white outline-none cursor-pointer"
+                  >
+                    <option value="Huawei" className="bg-[#0C0C0C]">Huawei</option>
+                    <option value="ZTE" className="bg-[#0C0C0C]">ZTE</option>
+                    <option value="HiOSO" className="bg-[#0C0C0C]">HiOSO</option>
+                    <option value="FiberHome" className="bg-[#0C0C0C]">FiberHome</option>
+                    <option value="Nokia" className="bg-[#0C0C0C]">Nokia</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">IP Address OLT</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: 10.10.40.2"
+                    value={newOltIp}
+                    onChange={(e) => setNewOltIp(e.target.value)}
+                    className="w-full py-2.5 px-3 bg-black border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white placeholder-white/20 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">Jumlah Port PON</label>
+                  <select
+                    value={newOltPorts}
+                    onChange={(e) => setNewOltPorts(Number(e.target.value))}
+                    className="w-full py-2.5 px-3 bg-black border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white outline-none cursor-pointer"
+                  >
+                    <option value="4" className="bg-[#0C0C0C]">4 Port PON</option>
+                    <option value="8" className="bg-[#0C0C0C]">8 Port PON</option>
+                    <option value="16" className="bg-[#0C0C0C]">16 Port PON</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60 mb-1">Deskripsi Lokasi / Cluster (Opsional)</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Sektor Utara FTTH"
+                  value={newOltLocation}
+                  onChange={(e) => setNewOltLocation(e.target.value)}
+                  className="w-full py-2.5 px-3 bg-black border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white placeholder-white/20 outline-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setShowAddOltModal(false)}
+                  className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-extrabold py-2.5 rounded-xl text-xs shadow-lg transition-all cursor-pointer active:scale-[0.98]"
+                >
+                  Hubungkan OLT
                 </button>
               </div>
             </form>
